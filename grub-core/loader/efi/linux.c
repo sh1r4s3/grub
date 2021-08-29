@@ -54,11 +54,6 @@ static int initrd_use_loadfile2;
 static grub_efi_guid_t load_file2_guid = GRUB_EFI_LOAD_FILE2_PROTOCOL_GUID;
 static grub_efi_guid_t device_path_guid = GRUB_EFI_DEVICE_PATH_GUID;
 
-#ifndef get_hartid
-#define get_hartid(__v)
-#warning 'missing get_hartid definition! please implement it in include/grub/cpu/linux.h'
-#endif
-
 grub_err_t
 grub_arch_efi_linux_check_image (struct linux_arch_kernel_header * lh)
 {
@@ -100,9 +95,6 @@ finalize_params_linux (void)
 
   void *fdt;
 
-  int hartid = 0;
-  get_hartid(hartid);
-
   fdt = grub_fdt_load (GRUB_EFI_LINUX_FDT_EXTRA_SPACE);
   if (!fdt)
     goto failure;
@@ -114,7 +106,11 @@ finalize_params_linux (void)
   if (node < 1)
     goto failure;
 
+#ifdef boot-hartid
+  int hartid = 0;
+  get_hartid(hartid);
   grub_fdt_set_prop32 (fdt, node, "boot-hartid", hartid);
+#endif
 
   /* Set initrd info */
   if (initrd_start && initrd_end > initrd_start)
